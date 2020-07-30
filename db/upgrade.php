@@ -577,6 +577,46 @@ function xmldb_turnitintool_upgrade($oldversion) {
         }
     }
 
+    if ($result && $oldversion < 2020073000) {
+        if (is_callable(array($DB,'get_manager'))) {
+            $dbman = $DB->get_manager();
+            $table = new xmldb_table('turnitintool');
+
+            // The transmatch column should allow NULL.
+            $field = new xmldb_field('transmatch', XMLDB_TYPE_INTEGER, '10', true, false, false, 0, 'erater_style');
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->change_field_notnull($table, $field);
+            }
+
+            // The needs_updating column should allow NULL and has a length of 10.
+            $field = new xmldb_field('needs_updating', XMLDB_TYPE_INTEGER, '10', true, false, false, 0, 'transmatch');
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->change_field_notnull($table, $field);
+                $dbman->change_field_precision($table, $field);
+            }
+
+            // The institution_check column should allow NULL.
+            $field = new xmldb_field('institution_check', XMLDB_TYPE_INTEGER, '1', false, false, false, 0, 'needs_updating');
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->change_field_notnull($table, $field);
+            }
+
+            // The migrated column should allow NULL.
+            $field = new xmldb_field('migrated', XMLDB_TYPE_INTEGER, '1', false, false, false, 0, 'institution_check');
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->change_field_notnull($table, $field);
+            }
+
+            $table = new xmldb_table('turnitintool_submissions');
+
+            // The submission_transmatch column should allow NULL.
+            $field = new xmldb_field('submission_transmatch', XMLDB_TYPE_INTEGER, '10', true, false, false, 0, 'submission_unanonreason');
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->change_field_notnull($table, $field);
+            }
+        }
+    }
+
     return $result;
 }
 
